@@ -109,14 +109,49 @@ export default {
 };
 ```
 
+- Set scenario for related APIs
+
+For example
+
+```ts
+export default {
+  delay: 1000,
+  useScenario: [{
+    api: 'progress',
+    scenario: ['90-percent', '100-percent']
+  }]
+};
+```
+
+or in programmatic way
+
+```ts
+async function resolver(ctx, next, server) {
+  const result = Promise.resolve({
+    data: {
+      percent: 70
+    }
+  });
+  server.useScenario('progress', '80-percent');
+  return result;
+}
+```
+
 #### Default Scenario Setting
-Make sure there is a `_default.[js, ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name.
+Make sure there is a `_default.[js, ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names.
 
 For example
 
 ```ts
 export default 'success';
 ```
+
+an array of scenarios (mock api will send response with each scenario in order)
+
+```ts
+export default ['success', 'failed'];
+```
+
 
 ### Start The Mock Server
 Export your `mock_home` path as `process.env.MOCK_HOME` or pass it to the constructor of mock server.
@@ -188,6 +223,16 @@ ms state <api>
 // or use cmd alias
 
 ms c <api>
+```
+
+#### Load API scenario preset
+`cd` to `MOCK_HOME`.
+```
+ms load <preset>
+
+// or use cmd alias
+
+ms l <preset>
 ```
 
 ### Public API

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import program, { CommanderStatic }  from 'commander';
+import program, { CommanderStatic } from 'commander';
 
 import use from './cmd/use';
+import load from './cmd/load';
 import state from './cmd/state';
 import start from './cmd/start';
 
@@ -15,6 +16,7 @@ function useAction(action: (commander: CommanderStatic) => void) {
 }
 
 useAction(use);
+useAction(load);
 useAction(state);
 useAction(start);
 

@@ -1,10 +1,13 @@
 async function resolver(ctx, next, server) {
   const result = Promise.resolve({
     data: {
-      percent: 70
-    }
+      percent: 80
+    },
+    useScenario: [{
+      api: 'progress',
+      scenario: ['90-percent', '100-percent']
+    }]
   });
-  server.useScenario('progress', '80-percent');
   return result;
 }
 

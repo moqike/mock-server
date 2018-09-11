@@ -94,13 +94,43 @@ describe('all tests', function() {
     });
   });
 
-  it.only('should change progress response after first request', async function() {
+  it('should load preset', async function() {
+    const server = mockServer.listen();
+    await request(server).post('/_api/load-preset')
+    .send({
+      preset: 'demo'
+    });
+    let res = await request(server).get('/user/1');
+    assert.equal(res.status, 404);
+    res = await request(server).get('/user/1');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { name: 'Peter Pan', address: '101 Bluestreet, NewYork' });
+  });
+
+  it('should change progress response after first request', async function() {
     const server = mockServer.listen();
     let res = await request(server).get('/progress');
     assert.equal(res.status, 200);
     assert.deepEqual(res.body, {
       percent: 70
     });
+    res = await request(server).get('/progress');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      percent: 80
+    });
+    res = await request(server).get('/progress');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      percent: 90
+    });
+    res = await request(server).get('/progress');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      percent: 100
+    });
+    // check the status again as the scenario array should contain
+    // only one element now.
     res = await request(server).get('/progress');
     assert.equal(res.status, 200);
     assert.deepEqual(res.body, {

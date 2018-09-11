@@ -11,7 +11,7 @@ import http from 'http';
 import https from 'https';
 import path from 'path';
 
-import { Route, ProxySetting, HTTP_METHOD, HttpsOptions, ControllerSetting } from './types';
+import { Route, ProxySetting, HTTP_METHOD, HttpsOptions, ControllerSetting, PresetSetting, ScenarioSetting } from './types';
 import { sleep } from './util';
 
 const runtimePath = path.resolve('./');
@@ -26,7 +26,7 @@ export interface MockServerOptions {
 }
 
 interface ScenarioMap {
-  [key: string]: string;
+  [key: string]: string | string[];
 }
 
 const DEFAULT_SUCCESS_STATUS = 200;
@@ -79,12 +79,20 @@ export class MockServer {
     }
   }
 
-  useScenario(api, scenario) {
+  useScenario(api: string, scenario: ScenarioSetting) {
     if (!scenario) {
       scenario = this._getDefaultScenario(api);
     }
     console.log(`use-scenario [${scenario}] for api [${api}] `);
     this._scenarioMap[api] = scenario;
+  }
+
+  loadPreset(preset: string) {
+    const presetSetting: PresetSetting = require(`${this._mockHome}/preset/${preset}`).default;
+    // tslint:disable-next-line:forin
+    for (const key in presetSetting) {
+      this.useScenario(key, presetSetting[key]);
+    }
   }
 
   private _configRoute(routeFileName: string): void {
@@ -115,11 +123,17 @@ export class MockServer {
     const absoluteControllerPath = `${this._mockHome}/data/${controllerPath}`;
     const wrappedController = async (ctx, next) => {
       let scenario = this._scenarioMap[controllerPath];
-      if (!scenario) {
+      const isEmptyArray = Array.isArray(scenario) && scenario.length === 0;
+      if (!scenario || isEmptyArray) {
         scenario = this._getDefaultScenario(controllerPath);
         this._scenarioMap[controllerPath] = scenario;
       }
-      const controller = require(`${absoluteControllerPath}/${scenario}`).default;
+      scenario = Array.isArray(scenario) ? scenario : [scenario];
+      const currentScenario: string = scenario.shift() as string;
+      if (scenario.length === 0) {
+        scenario.push(currentScenario);
+      }
+      const controller = require(`${absoluteControllerPath}/${currentScenario}`).default;
       if (typeof controller === 'object') {
         if (controller.proxy) {
           await this._useProxy(controller, ctx, next);
@@ -149,6 +163,11 @@ export class MockServer {
   private async _handleControllerSetting(controllerSetting: ControllerSetting, ctx) {
     if (controllerSetting.delay) {
       await sleep(controllerSetting.delay);
+    }
+    if (controllerSetting.useScenario) {
+      controllerSetting.useScenario.forEach((useScenarioSetting) => {
+        this.useScenario(useScenarioSetting.api, useScenarioSetting.scenario);
+      });
     }
     ctx.status = controllerSetting.status || DEFAULT_SUCCESS_STATUS;
     ctx.body = controllerSetting.data;
@@ -185,7 +204,6 @@ export class MockServer {
   }
 
   private _registerPublicApi(): void {
-    console.log('[POST]: /_api/use-scenario');
     this._router.post('/_api/use-scenario', async (ctx, next) => {
       const request = ctx.request;
       const api = request.body.api;
@@ -194,6 +212,16 @@ export class MockServer {
       ctx.status = 200;
       ctx.response.body = {
         scenario
+      };
+    });
+
+    this._router.post('/_api/load-preset', async (ctx, next) => {
+      const request = ctx.request;
+      const preset = request.body.preset;
+      this.loadPreset(preset);
+      ctx.status = 200;
+      ctx.response.body = {
+        preset
       };
     });
 

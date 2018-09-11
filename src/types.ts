@@ -32,9 +32,20 @@ export interface MockServerConfig {
   httpsOptions?: HttpsOptions;
 }
 
+export type ScenarioSetting = string | string[];
+
+export interface UseScenarioSetting {
+  api: string;
+  scenario: ScenarioSetting;
+}
+
 export interface ControllerSetting {
   data: any;
   status?: number;
   delay?: number;
+  useScenario?: UseScenarioSetting[];
+}
 
+export interface PresetSetting {
+  [key: string]: ScenarioSetting;
 }
