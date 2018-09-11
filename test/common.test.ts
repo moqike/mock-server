@@ -93,4 +93,18 @@ describe('all tests', function() {
       brand: 'auto'
     });
   });
+
+  it.only('should change progress response after first request', async function() {
+    const server = mockServer.listen();
+    let res = await request(server).get('/progress');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      percent: 70
+    });
+    res = await request(server).get('/progress');
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      percent: 100
+    });
+  });
 });

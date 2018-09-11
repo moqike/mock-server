@@ -79,6 +79,14 @@ export class MockServer {
     }
   }
 
+  useScenario(api, scenario) {
+    if (!scenario) {
+      scenario = this._getDefaultScenario(api);
+    }
+    console.log(`use-scenario [${scenario}] for api [${api}] `);
+    this._scenarioMap[api] = scenario;
+  }
+
   private _configRoute(routeFileName: string): void {
     const routeSetting: Route = require(`${this._mockHome}/routing/${routeFileName}`).default;
     const routeList: Route[] = Array.isArray(routeSetting) ? routeSetting : [routeSetting];
@@ -100,8 +108,8 @@ export class MockServer {
 
   private _getDefaultScenario(controllerPath: string): string {
     const scenario = require(`${this._mockHome}/data/${controllerPath}/_default`).default;
-    return scenario
-  } 
+    return scenario;
+  }
 
   private _registerRouteController(method: string, routePathArray: string[], controllerPath: string ): void {
     const absoluteControllerPath = `${this._mockHome}/data/${controllerPath}`;
@@ -120,7 +128,7 @@ export class MockServer {
         }
       } else if (typeof controller === 'function') {
         try {
-          const result = await controller(ctx, next);
+          const result = await controller(ctx, next, this);
           await this._handleControllerSetting(result, ctx);
         } catch (e) {
           await this._handleControllerSetting({
@@ -181,18 +189,14 @@ export class MockServer {
     this._router.post('/_api/use-scenario', async (ctx, next) => {
       const request = ctx.request;
       const api = request.body.api;
-      let scenario = request.body.scenario;
-      if (!scenario) {
-        scenario = this._getDefaultScenario(api);
-      }
-      console.log(`use-scenario [${scenario}] for api [${api}] `);
-      this._scenarioMap[api] = scenario;
+      const scenario = request.body.scenario;
+      this.useScenario(api, scenario);
       ctx.status = 200;
       ctx.response.body = {
         scenario
       };
     });
-    
+
     this._router.post('/_api/state-scenario', async (ctx, next) => {
       const request = ctx.request;
       const api = request.body.api;
