@@ -22,6 +22,19 @@ mock_home
    |--[route-file-name]
 ```
 
+#### (Optional) Use mqk cli to create mock server
+For mqk cli usage see [mqk-cli](fhttps://github.com/moqike/mqk-cli)
+```sh
+# install cli tool
+npm i -g mqk-cli
+# install mock server template
+npm i -g mqk-template-mock-server@latest
+# create mock server instance
+mqk g
+# select mock-server
+# created!
+```
+
 #### Route file
 A route file should export an array of `Route` settings
 
