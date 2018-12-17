@@ -1,5 +1,5 @@
 async function resolver(ctx) {
-  const result = Promise.resolve({
+  const result = await Promise.resolve({
     data: {
       percent: 100
     }

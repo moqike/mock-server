@@ -57,7 +57,7 @@ A route file should be one of following:
 For example
 ```ts
 async function resolver(ctx) {
-  let result = Promise.resolve({
+  let result = await Promise.resolve({
     delay: 1000,
     data: {
       name: 'Peter Pan',
@@ -68,7 +68,7 @@ async function resolver(ctx) {
   if (ctx.params.id) {
     const id = parseInt(ctx.params.id, 10);
     if (id > 5) {
-      result = Promise.reject({
+      result = await Promise.reject({
         status: 404,
         data: {
           message: 'not found'
@@ -127,7 +127,7 @@ or in programmatic way
 
 ```ts
 async function resolver(ctx, next, server) {
-  const result = Promise.resolve({
+  const result = await Promise.resolve({
     data: {
       percent: 70
     }

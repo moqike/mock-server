@@ -1,5 +1,5 @@
 async function resolver(ctx) {
-  return Promise.reject({
+  return await Promise.reject({
     status: 404,
     data: {
       message: 'not found'
