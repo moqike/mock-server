@@ -87,11 +87,56 @@ describe('all tests', function() {
       api: 'car',
       scenario: 'delay'
     });
+    const start = Date.now();
     const res = await request(server).get('/car');
+    const usedTime = Date.now() - start;
     assert.equal(res.status, 200);
     assert.deepEqual(res.body, {
       brand: 'auto'
     });
+    assert(usedTime >= 1000);
+  });
+
+  it('should return 200 with car detail after 100ms', async function() {
+    const server = mockServer.listen();
+    await request(server).post('/_api/use-scenario')
+    .send({
+      api: 'car',
+      scenario: 'success'
+    });
+    const start = Date.now();
+    const res = await request(server).get('/car');
+    const usedTime = Date.now() - start;
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      brand: 'auto'
+    });
+    assert(usedTime >= 100);
+  });
+
+  it('should return 200 with car detail after 150ms ~ 200ms', async function() {
+    const min = 150;
+    const max = 200;
+    mockServer._globalConfig.delay = {
+      min,
+      max
+    };
+    const server = mockServer.listen();
+    await request(server).post('/_api/use-scenario')
+    .send({
+      api: 'car',
+      scenario: 'success'
+    });
+    const start = Date.now();
+    const res = await request(server).get('/car');
+    const usedTime = Date.now() - start;
+    console.log(usedTime);
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, {
+      brand: 'auto'
+    });
+    assert(usedTime >= min);
+    assert(usedTime < max + 5);
   });
 
   it('should load preset', async function() {

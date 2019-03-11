@@ -10,8 +10,10 @@ import rp from 'request-promise';
 import http from 'http';
 import https from 'https';
 import path from 'path';
+import chalk from 'chalk';
 
-import { Route, ProxySetting, HTTP_METHOD, HttpsOptions, ControllerSetting, PresetSetting, ScenarioSetting } from './types';
+import { Route, ProxySetting, HTTP_METHOD, HttpsOptions,
+  GlobalConfig, ControllerSetting, PresetSetting, ScenarioSetting } from './types';
 import { sleep } from './util';
 
 const runtimePath = path.resolve('./');
@@ -40,6 +42,7 @@ export class MockServer {
   private _scenarioMap: ScenarioMap = {};
   private _https: boolean = false;
   private _httpsOptions: HttpsOptions | null | undefined = null;
+  private _globalConfig: GlobalConfig = {};
 
   constructor(options: MockServerOptions) {
     this._mockHome = (options.mockHome || process.env.MOCK_HOME || runtimePath) as string;
@@ -52,6 +55,11 @@ export class MockServer {
       routeFiles.forEach((routeFileName) => {
         this._configRoute(routeFileName);
       });
+    }
+    try {
+      this._globalConfig = require(`${this._mockHome}/msconfig.json`);
+    } catch (e) {
+      chalk.red('msconfig.json does not exist under mock_home');
     }
     this._registerPublicApi();
     this._app.use(this._router.routes());
@@ -163,6 +171,17 @@ export class MockServer {
   private async _handleControllerSetting(controllerSetting: ControllerSetting, ctx) {
     if (controllerSetting.delay) {
       await sleep(controllerSetting.delay);
+    } else if (this._globalConfig.delay) {
+      let delay: number = null;
+      if (Number.isInteger(this._globalConfig.delay as number)) {
+        delay = this._globalConfig.delay as number;
+      } else if ((this._globalConfig.delay as any).max > (this._globalConfig.delay as any).min) {
+        const delayRange: any = this._globalConfig.delay;
+        delay = delayRange.min + Math.floor(Math.random() * (delayRange.max - delayRange.min));
+      }
+      if (delay) {
+        await sleep(delay);
+      }
     }
     if (controllerSetting.useScenario) {
       controllerSetting.useScenario.forEach((useScenarioSetting) => {

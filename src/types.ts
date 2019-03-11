@@ -32,6 +32,14 @@ export interface MockServerConfig {
   httpsOptions?: HttpsOptions;
 }
 
+export interface GlobalConfig {
+  port?: string;
+  delay?: number | {
+    min: number;
+    max: number;
+  };
+}
+
 export type ScenarioSetting = string | string[];
 
 export interface UseScenarioSetting {

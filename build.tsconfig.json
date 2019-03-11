@@ -12,7 +12,7 @@
     "outDir": "./lib",
     "rootDir": "./src",
     "downlevelIteration": true,
-    "strict": true,
+    "strict": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "moduleResolution": "node",

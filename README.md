@@ -17,9 +17,16 @@ mock_home
 |     |--_default.js | _default.ts
 |     |--[api-scenario-file-name]
 |
+|--preset
+|     |
+|     |--[preset-file-name]
+|
 |--routing
-   |
-   |--[route-file-name]
+|     |
+|     |--[route-file-name]
+|
+|--msconfig.json
+
 ```
 
 #### (Optional) Use mqk cli to create mock server
@@ -165,6 +172,14 @@ an array of scenarios (mock api will send response with each scenario in order)
 export default ['success', 'failed'];
 ```
 
+#### Globa configuration file
+The global configuration file `msconfig.json` can be provided under `mock_home` folder. Global configurations are overridden by API specific configurations.
+Following is an example configuration file:
+```json
+{
+  "delay": 100 // or range {"min": 100, "max": 150}
+}
+```
 
 ### Start The Mock Server
 Export your `mock_home` path as `process.env.MOCK_HOME` or pass it to the constructor of mock server.
@@ -198,7 +213,6 @@ mockServer.listen(9443);
 ```ts
 mockServer.close();
 ```
-
 
 ### CLI
 #### install
