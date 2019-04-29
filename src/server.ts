@@ -2,6 +2,7 @@ import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from 'koa-router';
 import cors from '@koa/cors';
+import multer from 'koa-multer';
 import fs from 'fs';
 import { Server } from 'http';
 import { Server as HttpsServer } from 'https';
@@ -43,6 +44,7 @@ export class MockServer {
   private _https: boolean = false;
   private _httpsOptions: HttpsOptions | null | undefined = null;
   private _globalConfig: GlobalConfig = {};
+  private _multer: multer.Instance;
 
   constructor(options: MockServerOptions) {
     this._mockHome = (options.mockHome || process.env.MOCK_HOME || runtimePath) as string;
@@ -50,6 +52,7 @@ export class MockServer {
     this._httpsOptions = options.httpsOptions;
     this._app.use(bodyParser());
     this._enableCORS();
+    this._initUploadFolder();
     const routeFiles = fs.readdirSync(`${this._mockHome}/routing`);
     if (routeFiles) {
       routeFiles.forEach((routeFileName) => {
@@ -92,7 +95,7 @@ export class MockServer {
       scenario = this._getDefaultScenario(api);
     }
     console.log(`use-scenario [${scenario}] for api [${api}] `);
-    this._scenarioMap[api] = scenario;
+    this._scenarioMap[api] = [].concat(scenario);
   }
 
   loadPreset(preset: string) {
@@ -119,6 +122,19 @@ export class MockServer {
         }
         this._registerRouteController(method, routePathArray, route.controller);
       });
+    });
+  }
+
+  private _initUploadFolder() {
+    const relativePath = this._globalConfig.uploadFolder || './upload';
+    const dest = path.resolve(this._mockHome, relativePath);
+    console.log(dest);
+    if (!fs.existsSync(dest)) {
+      console.log(`created upload folder: ${dest}`)
+      fs.mkdirSync(dest);
+    };
+    this._multer = multer({
+      dest
     });
   }
 
@@ -163,7 +179,7 @@ export class MockServer {
 
     routePathArray.forEach((routePath) => {
       console.log(`[${method}]: ${routePath} -> ${controllerPath}`);
-      this._router[method.toLowerCase()](routePath, wrappedController);
+      this._router[method.toLowerCase()](routePath, this._multer.any(), wrappedController);
     });
 
   }

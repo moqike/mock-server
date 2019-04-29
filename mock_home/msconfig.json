@@ -1,4 +1,5 @@
 {
   "port": "3000",
-  "delay": 100
+  "delay": 100,
+  "uploadFolder": null
 }

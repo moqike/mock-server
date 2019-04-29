@@ -38,6 +38,7 @@ export interface GlobalConfig {
     min: number;
     max: number;
   };
+  uploadFolder?: string;
 }
 
 export type ScenarioSetting = string | string[];
