@@ -1,6 +1,6 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
-import Router from 'koa-router';
+import Router, { RouterContext } from 'koa-router';
 import cors from '@koa/cors';
 import multer from 'koa-multer';
 import fs from 'fs';
@@ -12,10 +12,12 @@ import http from 'http';
 import https from 'https';
 import path from 'path';
 import chalk from 'chalk';
+import { Validator as JsonSchemaValidator } from 'jsonschema';
 
 import { Route, ProxySetting, HTTP_METHOD, HttpsOptions,
-  GlobalConfig, ControllerSetting, PresetSetting, ScenarioSetting } from './types';
-import { sleep } from './util';
+  GlobalConfig, ControllerSetting, PresetSetting, ScenarioSetting,
+  Validator } from './types';
+import { sleep, validate } from './util';
 
 const runtimePath = path.resolve('./');
 
@@ -50,7 +52,9 @@ export class MockServer {
     this._mockHome = (options.mockHome || process.env.MOCK_HOME || runtimePath) as string;
     this._https = !!options.https;
     this._httpsOptions = options.httpsOptions;
-    this._app.use(bodyParser());
+    this._app.use(bodyParser({
+      enableTypes: ['json', 'form', 'text']
+    }));
     this._enableCORS();
     this._initUploadFolder();
     const routeFiles = fs.readdirSync(`${this._mockHome}/routing`);
@@ -128,7 +132,6 @@ export class MockServer {
   private _initUploadFolder() {
     const relativePath = this._globalConfig.uploadFolder || './upload';
     const dest = path.resolve(this._mockHome, relativePath);
-    console.log(dest);
     if (!fs.existsSync(dest)) {
       console.log(`created upload folder: ${dest}`)
       fs.mkdirSync(dest);
@@ -145,7 +148,7 @@ export class MockServer {
 
   private _registerRouteController(method: string, routePathArray: string[], controllerPath: string ): void {
     const absoluteControllerPath = `${this._mockHome}/data/${controllerPath}`;
-    const wrappedController = async (ctx, next) => {
+    const wrappedController = async (ctx: RouterContext, next) => {
       let scenario = this._scenarioMap[controllerPath];
       const isEmptyArray = Array.isArray(scenario) && scenario.length === 0;
       if (!scenario || isEmptyArray) {
@@ -184,7 +187,10 @@ export class MockServer {
 
   }
 
-  private async _handleControllerSetting(controllerSetting: ControllerSetting, ctx) {
+  private async _handleControllerSetting(controllerSetting: ControllerSetting,
+    ctx: RouterContext
+    ) {
+    // handle delay
     if (controllerSetting.delay) {
       await sleep(controllerSetting.delay);
     } else if (this._globalConfig.delay) {
@@ -199,13 +205,91 @@ export class MockServer {
         await sleep(delay);
       }
     }
+
+    // validate
+    let validationResult = {
+      isValid: true,
+      status: null
+    };
+    if (controllerSetting.validators && controllerSetting.validators.length) {
+      validationResult = this._validateRequest(ctx, controllerSetting.validators);
+    }
+
+    // handle useScenario
     if (controllerSetting.useScenario) {
       controllerSetting.useScenario.forEach((useScenarioSetting) => {
         this.useScenario(useScenarioSetting.api, useScenarioSetting.scenario);
       });
     }
-    ctx.status = controllerSetting.status || DEFAULT_SUCCESS_STATUS;
-    ctx.body = controllerSetting.data;
+
+    // set data & status
+    if (validationResult.isValid) {
+      ctx.status = controllerSetting.status || DEFAULT_SUCCESS_STATUS;
+      ctx.body = controllerSetting.data;
+    } else {
+      ctx.status = validationResult.status;
+    }
+  }
+
+  private _validateRequest(ctx: RouterContext<{}, {}>, validators: Validator[]): {
+    isValid: boolean,
+    status: number
+  } {
+    function getValidateResult(isValid: boolean, status?: number, message?: string) {
+      if (message) {
+        console.log(chalk.red(message));
+      }
+      return {
+        isValid,
+        status: isValid ? null : (status || 400)
+      }
+    }
+
+    for (const validator of validators) {
+      if (validator.rule) {
+        const rule = validator.rule;
+        const requiredHeaders = rule.headers || {};
+        // check headers
+        for (const header in requiredHeaders) {
+          const headerLowerCase = header.toLowerCase();
+          if ((headerLowerCase in ctx.headers)) {
+            if (!validate(ctx.headers[headerLowerCase], requiredHeaders[header])) {
+              return getValidateResult(false, validator.status,
+                `Wrong header ${header} value. expected: ${requiredHeaders[header]} , get: ${ctx.headers[headerLowerCase]}`);
+            }
+          } else {
+            return getValidateResult(false, validator.status, `Required header: ${header} not found`);
+          }
+        }
+        // check body
+        if (rule.body) {
+          if (rule.body.type === 'json'
+            || rule.body.type === 'form') {
+            const jsonSchemaValidator = new JsonSchemaValidator();
+            if (rule.body.refs) {
+              rule.body.refs.forEach((ref) => {
+                console.log(`add refs ${ref.id}`);
+                jsonSchemaValidator.addSchema(ref, ref.id);
+              });
+            }
+            const schemaValidationResult = jsonSchemaValidator.validate(ctx.request.body, {
+              type: 'object',
+              properties: rule.body.schema
+            });
+            if (!schemaValidationResult.valid) {
+              return getValidateResult(false, validator.status,
+                `Schema validation failed: \n ${schemaValidationResult.errors.join('\n')}`);
+            };
+          } else if (rule.body.type === 'text') {
+            if (!validate(ctx.request.body, rule.body.pattern)) {
+              return getValidateResult(false, validator.status,
+                `Text pattern validation failed. expected: ${rule.body.pattern} , get: ${ctx.request.body} `);
+            };
+          }
+        }
+      }
+    }
+    return getValidateResult(true);
   }
 
   private async _useProxy(proxySetting: ProxySetting, ctx, next) {

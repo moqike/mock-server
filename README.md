@@ -157,6 +157,69 @@ async function resolver(ctx, next, server) {
 }
 ```
 
+- Validate request headers and data
+For example
+
+```ts
+export default {
+  data: {
+    name: 'Peter Pan',
+    address: '101 Bluestreet, NewYork'
+  },
+  validators: [{
+    rule: {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': /.+/,
+        'x-extra-info': 'key-abc'
+      },
+      body: {
+        type: 'json',
+        schema: {
+          name: {
+            type: 'string',
+          },
+          address: {
+            '$ref': '/Address'
+          }
+        },
+        refs: [{
+          'id': '/Address',
+          'type': 'object',
+          'properties': {
+            'street': {
+              'type': 'string'
+            },
+            'city': {
+              'type': 'string'
+            }
+          }
+        }]
+      }
+    },
+    status: 400
+  }]
+};
+```
+
+Validate header
+
+`rule.headers[key]` can be `string` or `RegExp`
+
+Validate body
+
+`rule.body.type` can be one of `json`, `form`, `text`
+
+For `json`, following options are available:
+- `rule.body.schema`: `JSON schema`
+- `rule.body.refs`: `JSON schema definitoin` to be referenced in schema
+
+For `form`, following options are available:
+- `rule.body.schema`: JSON schema
+
+For `text`, following options are available:
+- `rule.body.pattern`: `string` or `RegExp`
+
 #### Default Scenario Setting
 Make sure there is a `_default.[js, ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names.
 
@@ -276,3 +339,12 @@ params:
 
   - api: string (the name of controller)
   - scenario: string (the name of scenario)
+
+
+### Change log
+- v1.2
+  - Request validator
+- v1.1
+  - Global delay configuration (support `max`, `min` settings).
+  - Fix form-data/multipart file upload
+- v1.0 initial release

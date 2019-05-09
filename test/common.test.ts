@@ -4,7 +4,7 @@ import request from 'supertest';
 import path from 'path';
 import { MockServer } from '../src/index';
 
-describe('all tests', function() {
+describe('common tests', function() {
   let mockServer;
   before(function() {
     mockServer = new MockServer({

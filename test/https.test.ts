@@ -9,7 +9,7 @@ import { MockServer } from '../src/index';
 // Supress self signed cert error
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-describe('test with proxy', function() {
+describe('test with https protocal', function() {
   let mockServer;
 
   afterEach(function () {

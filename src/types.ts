@@ -1,3 +1,5 @@
+import { Schema } from 'jsonschema';
+
 export enum HTTP_METHOD {
   GET = 'GET',
   POST = 'POST',
@@ -48,11 +50,41 @@ export interface UseScenarioSetting {
   scenario: ScenarioSetting;
 }
 
+export type ValidatorRuleBodyType = 'json' | 'form' | 'text';
+
+export interface ValidatorRule {
+  headers: {
+    [key: string]: string;
+  };
+  body: {
+    type: 'json';
+    schema: {
+      [key: string]: Schema
+    };
+    refs?: Schema[];
+  } | {
+    type: 'form';
+    schema: {
+      [key: string]: Schema
+    };
+    refs?: Schema[];
+  } | {
+    type: 'text';
+    pattern?: RegExp | string;
+  }
+}
+
+export interface Validator {
+  rule: ValidatorRule;
+  status?: number;
+}
+
 export interface ControllerSetting {
   data: any;
   status?: number;
   delay?: number;
   useScenario?: UseScenarioSetting[];
+  validators?: Validator[];
 }
 
 export interface PresetSetting {
