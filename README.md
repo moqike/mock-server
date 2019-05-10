@@ -1,11 +1,13 @@
 <a href="http://travis-ci.com/moqike/mock-server"><img src="https://api.travis-ci.com/moqike/mock-server.svg?branch=master" alt="Build Status"></a>
 
-### Install
+## Install
+
 ```sh
 npm i --save mqk-mock-server
 ```
 
-### Set up mock_home
+## Set up mock_home
+
 Create a folder as `mock_home`. `mock_home` folder should be in following structure:
 ```
 mock_home
@@ -29,8 +31,10 @@ mock_home
 
 ```
 
-#### (Optional) Use mqk cli to create mock server
+### (Optional) Use mqk cli to create mock server
+
 For mqk cli usage see [mqk-cli](fhttps://github.com/moqike/mqk-cli)
+
 ```sh
 # install cli tool
 npm i -g mqk-cli
@@ -42,8 +46,9 @@ mqk g
 # created!
 ```
 
-#### Route file
-A route file should export an array of `Route` settings
+## Route file
+
+A route file should export an array of `Route` settings.
 
 ```ts
 interface Route {
@@ -54,6 +59,7 @@ interface Route {
 ```
 
 For example
+
 ```ts
 export default [{
   path: '/user',
@@ -70,13 +76,46 @@ export default [{
 }];
 ```
 
-#### Api Scenario Controller File
-A route file should be one of following:
-- Export a function that returns a Promise which resolves / rejects with mock api response
+## Default Scenario Setting
+Make sure there is a `_default.js | _default.ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names of `API Scenario File`.
 
 For example
+
 ```ts
-async function resolver(ctx) {
+export default 'success';
+```
+
+If an array of scenarios is used, mock server will respond with senario data in sequence.
+
+```ts
+export default ['success', 'failed'];
+```
+
+## API Scenario File
+
+An `API Scenario File` should return meta data for an API (regard as `API Setting`). `API Scenario File` can be in one of following format:
+
+### Plain Object (Declarative)
+
+Export `API Setting` in plain object directly.
+
+```ts
+export default {
+  delay: 1000,
+  data: {
+    brand: 'auto'
+  }
+};
+```
+
+### Async function (Programmatic)
+
+Export an async function that returns a Promise which resolves / rejects with `API Setting`.
+
+For example
+
+```ts
+async function resolver(ctx: RouterContext) {
   let result = await Promise.resolve({
     delay: 1000,
     data: {
@@ -102,22 +141,23 @@ async function resolver(ctx) {
 export default resolver;
 ```
 
-- Export data directly (a plain object)
+## API Setting
 
-For example
+`API Setting` support following features.
+
+### Response data, status, delay,
 
 ```ts
 export default {
   delay: 1000,
   data: {
     brand: 'auto'
-  }
+  },
+  status: 200 // 200 by default
 };
 ```
 
-- Export proxy setting (a plain object)
-
-For example
+### Proxy to remote API endpoint
 
 ```ts
 export default {
@@ -129,9 +169,8 @@ export default {
 };
 ```
 
-- Set scenario for related APIs
-
-For example
+### Set scenario for related APIs
+Declarative
 
 ```ts
 export default {
@@ -143,7 +182,7 @@ export default {
 };
 ```
 
-or in programmatic way
+Programmatic
 
 ```ts
 async function resolver(ctx, next, server) {
@@ -157,8 +196,7 @@ async function resolver(ctx, next, server) {
 }
 ```
 
-- Validate request headers and data
-For example
+### Validate request headers and data
 
 ```ts
 export default {
@@ -202,11 +240,11 @@ export default {
 };
 ```
 
-Validate header
+#### Validate http header
 
 `rule.headers[key]` can be `string` or `RegExp`
 
-Validate body
+#### Validate http body
 
 `rule.body.type` can be one of `json`, `form`, `text`
 
@@ -220,22 +258,8 @@ For `form`, following options are available:
 For `text`, following options are available:
 - `rule.body.pattern`: `string` or `RegExp`
 
-#### Default Scenario Setting
-Make sure there is a `_default.[js, ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names.
+## Globa configuration file
 
-For example
-
-```ts
-export default 'success';
-```
-
-an array of scenarios (mock api will send response with each scenario in order)
-
-```ts
-export default ['success', 'failed'];
-```
-
-#### Globa configuration file
 The global configuration file `msconfig.json` can be provided under `mock_home` folder. Global configurations are overridden by API specific configurations.
 Following is an example configuration file:
 ```json
@@ -244,10 +268,12 @@ Following is an example configuration file:
 }
 ```
 
-### Start The Mock Server
+## Start The Mock Server
+
 Export your `mock_home` path as `process.env.MOCK_HOME` or pass it to the constructor of mock server.
 
 For example
+
 ```ts
 import { MockServer } from 'mqk-mock-server';
 mockServer = new MockServer({
@@ -257,8 +283,9 @@ mockServer = new MockServer({
 mockServer.listen(3000);
 ```
 
-Enable https
-```
+Enable HTTPS
+
+```ts
 import { MockServer } from 'mqk-mock-server';
 mockServer = new MockServer({
   mockHome: path.resolve(__dirname, '../mock_home'),
@@ -272,76 +299,84 @@ mockServer = new MockServer({
 mockServer.listen(9443);
 ```
 
-### Stop The Mock Server
+## Stop The Mock Server
 ```ts
 mockServer.close();
 ```
 
-### CLI
-#### install
+## CLI
+### install
 
 ```sh
 npm i -g mqk-mock-server
 ```
 
-#### Start mock server
+### Start mock server
 
 `cd` to `MOCK_HOME`. Make sure files under MOCK_HOME is compiled otherwise you should use the programmatic way, see [Start The Mock Server](Start The Mock Server)
-```
+
+```sh
 ms start
 ```
 
-#### Change API scenario
+### Change API scenario
 `cd` to `MOCK_HOME`.
-```
+
+```sh
 ms use <api> <scenario>
 
-// or use cmd alias
+# or use cmd alias
 
 ms u <api> <scenario>
 
-// or use the default scenario
+# or use the default scenario
 
 ms u <api>
 ```
 
-#### Show current API scenario
+### Show current API scenario
 `cd` to `MOCK_HOME`.
-```
+
+```sh
 ms state <api>
 
-// or use cmd alias
+# or use cmd alias
 
 ms c <api>
 ```
 
-#### Load API scenario preset
+### Load API scenario preset
 `cd` to `MOCK_HOME`.
-```
+
+```sh
 ms load <preset>
 
-// or use cmd alias
+# or use cmd alias
 
 ms l <preset>
 ```
 
-### Public API
-#### Change API scenario
-Use this http API to change scenario for certain api dynamically.
+## Public API
+
+HTTP API used to control the mock server
+
+### Change API scenario
+
+Change scenario for certain api dynamically.
 
 `_api/use-scenario`
 
-method:
+Method:
 
-  `POST`
+`POST`
 
-params:
+Params:
 
-  - api: string (the name of controller)
-  - scenario: string (the name of scenario)
+- api: string (the name of controller)
+- scenario: string (the name of scenario)
 
 
-### Change log
+## Change log
 - v1.2
   - Request validator
 - v1.1

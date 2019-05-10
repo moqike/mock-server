@@ -295,7 +295,7 @@ export class MockServer {
   private async _useProxy(proxySetting: ProxySetting, ctx, next) {
     const toPath = pathToRegexp.compile(proxySetting.path);
     const targetPath = toPath(ctx.params);
-    // TODO: add support for `multipart`
+    // TODO: refine proxy support for `multipart`
     try {
       const protocal = proxySetting.protocal || 'http';
       const portInfo = proxySetting.port ? `:${proxySetting.port}` : '';
