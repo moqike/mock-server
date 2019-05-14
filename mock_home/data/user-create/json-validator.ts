@@ -13,11 +13,14 @@ export default {
       body: {
         type: 'json',
         schema: {
-          name: {
-            type: 'string',
-          },
-          address: {
-            '$ref': '/Address'
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+            },
+            address: {
+              '$ref': '/Address'
+            }
           }
         },
         refs: [{

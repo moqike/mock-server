@@ -272,10 +272,7 @@ export class MockServer {
                 jsonSchemaValidator.addSchema(ref, ref.id);
               });
             }
-            const schemaValidationResult = jsonSchemaValidator.validate(ctx.request.body, {
-              type: 'object',
-              properties: rule.body.schema
-            });
+            const schemaValidationResult = jsonSchemaValidator.validate(ctx.request.body, rule.body.schema);
             if (!schemaValidationResult.valid) {
               return getValidateResult(false, validator.status,
                 `Schema validation failed: \n ${schemaValidationResult.errors.join('\n')}`);

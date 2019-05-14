@@ -11,12 +11,15 @@ export default {
       body: {
         type: 'form',
         schema: {
-          name: {
-            type: 'string',
-            pattern: '^[a-zA-Z]+$'
-          },
-          address: {
-            type: 'string'
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              pattern: '^[a-zA-Z]+$'
+            },
+            address: {
+              type: 'string'
+            }
           }
         }
       }

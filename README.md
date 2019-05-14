@@ -214,12 +214,16 @@ export default {
       body: {
         type: 'json',
         schema: {
-          name: {
-            type: 'string',
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+            },
+            address: {
+              '$ref': '/Address'
+            }
           },
-          address: {
-            '$ref': '/Address'
-          }
+          required: ['name']
         },
         refs: [{
           'id': '/Address',
