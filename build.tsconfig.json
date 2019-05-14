@@ -7,8 +7,8 @@
       "dom"
     ],
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "declarationMap": false,
+    "sourceMap": false,
     "outDir": "./lib",
     "rootDir": "./src",
     "downlevelIteration": true,

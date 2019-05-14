@@ -1,3 +1,5 @@
+Just a simple mock server!
+
 <a href="http://travis-ci.com/moqike/mock-server"><img src="https://api.travis-ci.com/moqike/mock-server.svg?branch=master" alt="Build Status"></a>
 
 ## Install
@@ -77,7 +79,7 @@ export default [{
 ```
 
 ## Default Scenario Setting
-Make sure there is a `_default.js | _default.ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names of `API Scenario File`.
+Make sure there is a [`_default.js | _default.ts]` file under each `[api-controller-folder-name]` folder. It simply export the default scenario name/names of `API Scenario File`.
 
 For example
 
