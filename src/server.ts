@@ -305,7 +305,7 @@ export class MockServer {
           host: proxySetting.host
         },
         qs: ctx.request.query,
-        body: ctx.request.body.toString(),
+        body: ctx.request.rawBody,
         resolveWithFullResponse: true
       });
       ctx.set(result.headers);
