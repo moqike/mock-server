@@ -394,7 +394,7 @@ Params:
 
 
 ## Change log
-- v1.3
+- v1.2.4
   - `ms save` command
   - auto save changed scenarios to `preset/.tmp.ts` preset file
 - v1.2.3 fix proxy body param
