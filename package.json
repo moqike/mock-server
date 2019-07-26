@@ -1,6 +1,6 @@
 {
   "name": "mqk-mock-server",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "simple mock server supporting scenario based mock data",
   "keywords": [
     "mock",
@@ -48,7 +48,7 @@
     "rimraf": "^2.6.2",
     "supertest": "^3.1.0",
     "ts-node": "^7.0.1",
-    "typescript": "^3.0.1"
+    "typescript": "^3.2.2"
   },
   "dependencies": {
     "@koa/cors": "^2.2.2",

@@ -3,17 +3,19 @@ import 'mocha';
 import request from 'supertest';
 import path from 'path';
 import { MockServer } from '../src/index';
+import { MOCK_HOME, cleanup } from './util';
 
 describe('test validator feature', function() {
   let mockServer;
   before(function() {
     mockServer = new MockServer({
-      mockHome: path.resolve(__dirname, '../mock_home')
+      mockHome: MOCK_HOME
     });
   });
 
   afterEach(function () {
     mockServer.close();
+    cleanup();
   });
 
   it('should return 400 due to missing csrf token', async function() {

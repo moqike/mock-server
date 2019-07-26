@@ -1,19 +1,20 @@
 import assert from 'assert';
 import 'mocha';
 import request from 'supertest';
-import path from 'path';
 import { MockServer } from '../src/index';
+import { MOCK_HOME, cleanup } from './util';
 
 describe('common tests', function() {
   let mockServer;
   before(function() {
     mockServer = new MockServer({
-      mockHome: path.resolve(__dirname, '../mock_home')
+      mockHome: MOCK_HOME
     });
   });
 
   afterEach(function () {
     mockServer.close();
+    cleanup();
   });
 
   it('should return 200 with user list', async function() {

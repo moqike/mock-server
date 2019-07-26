@@ -5,6 +5,7 @@ import path from 'path';
 
 import { MockServer } from '../src/index';
 import fakeService from './server';
+import { MOCK_HOME, cleanup } from './util';
 
 describe('test with proxy', function() {
   let fakeServiceServer;
@@ -16,13 +17,14 @@ describe('test with proxy', function() {
 
   before(function() {
     mockServer = new MockServer({
-      mockHome: path.resolve(__dirname, '../mock_home')
+      mockHome: MOCK_HOME
     });
     fakeServiceServer = fakeService.listen(3001);
   });
 
   after(function () {
     fakeServiceServer.close();
+    cleanup();
   });
 
   it('should return 200 with data from proxy', async function() {

@@ -43,6 +43,7 @@ export class MockServer {
   private _mockHome: string;
   private _server: Server | HttpsServer | null = null;
   private _scenarioMap: ScenarioMap = {};
+  private _tmpScenarioMap: ScenarioMap = {};
   private _https: boolean = false;
   private _httpsOptions: HttpsOptions | null | undefined = null;
   private _globalConfig: GlobalConfig = {};
@@ -66,10 +67,14 @@ export class MockServer {
     try {
       this._globalConfig = require(`${this._mockHome}/msconfig.json`);
     } catch (e) {
-      chalk.red('msconfig.json does not exist under mock_home');
+      console.log(chalk.red('msconfig.json does not exist under mock_home'));
     }
     this._registerPublicApi();
     this._app.use(this._router.routes());
+    if (fs.existsSync(`${this._mockHome}/preset/.tmp.ts`)) {
+      console.log(chalk.green('cached preset file is loaded'));
+      this.loadPreset('.tmp');
+    }
   }
 
   listen(...args: any[]): Server | HttpsServer {
@@ -94,19 +99,42 @@ export class MockServer {
     }
   }
 
-  useScenario(api: string, scenario: ScenarioSetting) {
+  useScenario(api: string, scenario: ScenarioSetting, saveToCache: boolean = true) {
     if (!scenario) {
       scenario = this._getDefaultScenario(api);
     }
     console.log(`use-scenario [${scenario}] for api [${api}] `);
     this._scenarioMap[api] = [].concat(scenario);
+    this._tmpScenarioMap[api] = [].concat(scenario);
+    if (saveToCache) {
+      // save all used scenarios to tmp preset file which will be loaded after reboot
+      this.saveAsPreset('.tmp', true);
+    }
   }
 
   loadPreset(preset: string) {
     const presetSetting: PresetSetting = require(`${this._mockHome}/preset/${preset}`).default;
     // tslint:disable-next-line:forin
-    for (const key in presetSetting) {
-      this.useScenario(key, presetSetting[key]);
+    const keys = Object.keys(presetSetting);
+    for (let i = 0, len = keys.length; i < len; i++) {
+      const key = keys[i];
+      if (i != len -1) {
+        this.useScenario(key, presetSetting[key], false);
+      } else {
+        // do not write to cache file until load the last preset rule
+        this.useScenario(key, presetSetting[key]);
+      }
+    }
+  }
+
+  saveAsPreset(preset: string, overwrite: boolean = false): boolean {
+    const presetContent = `export default ${JSON.stringify(this._tmpScenarioMap, null, 2)}`;
+    const filePath = `${this._mockHome}/preset/${preset}.ts`;
+    if (!overwrite && fs.existsSync(filePath)) {
+      return false;
+    } else {
+      fs.writeFileSync(filePath, presetContent);
+      return true;
     }
   }
 
@@ -355,6 +383,29 @@ export class MockServer {
       ctx.response.body = {
         scenario
       };
+    });
+
+    this._router.post('/_api/save-preset', async (ctx, next) => {
+      const request = ctx.request;
+      const presetName = request.body.presetName;
+      // TODO: allow user to choose ts or js
+      const presetContent = `export default ${JSON.stringify(this._tmpScenarioMap, null, 2)}`;
+      const filePath = `${this._mockHome}/preset/${presetName}.ts`;
+      const result = this.saveAsPreset(presetName);
+      if (!result) {
+        const errorMessage = `preset file ${presetName}.ts already exists!`;
+        console.error(errorMessage);
+        ctx.status = 500;
+        ctx.response.body = {
+          message: errorMessage
+        };
+      } else {
+        console.log(`save-preset to ${presetName}.ts`);
+        ctx.status = 200;
+        ctx.response.body = {
+          ...this._tmpScenarioMap
+        };
+      }
     });
   }
 

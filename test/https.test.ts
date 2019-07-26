@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 
 import { MockServer } from '../src/index';
+import { MOCK_HOME, cleanup } from './util';
 
 // Supress self signed cert error
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -14,11 +15,12 @@ describe('test with https protocal', function() {
 
   afterEach(function () {
     mockServer.close();
+    cleanup();
   });
 
   before(function() {
     mockServer = new MockServer({
-      mockHome: path.resolve(__dirname, '../mock_home'),
+      mockHome: MOCK_HOME,
       https: true,
       httpsOptions: {
         key: fs.readFileSync(path.resolve(__dirname, './ssl/key.pem'), 'utf8'),

@@ -362,6 +362,17 @@ ms load <preset>
 ms l <preset>
 ```
 
+### Save all used API scenarios and loaded API scenario presets as local preset file
+`cd` to `MOCK_HOME`.
+
+```sh
+ms save <preset>
+
+# or use cmd alias
+
+ms p <preset>
+```
+
 ## Public API
 
 HTTP API used to control the mock server
@@ -383,6 +394,10 @@ Params:
 
 
 ## Change log
+- v1.3
+  - `ms save` command
+  - auto save changed scenarios to `preset/.tmp.ts` preset file
+- v1.2.3 fix proxy body param
 - v1.2
   - Request validator
 - v1.1

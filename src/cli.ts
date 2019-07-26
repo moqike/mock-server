@@ -6,6 +6,7 @@ import use from './cmd/use';
 import load from './cmd/load';
 import state from './cmd/state';
 import start from './cmd/start';
+import save from './cmd/save';
 
 const packageInfo = require('../package.json');
 
@@ -19,5 +20,6 @@ useAction(use);
 useAction(load);
 useAction(state);
 useAction(start);
+useAction(save);
 
 program.parse(process.argv);
