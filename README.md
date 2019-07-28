@@ -198,6 +198,23 @@ async function resolver(ctx, next, server) {
 }
 ```
 
+### (Optional) Use mqk cli to create API Scenario File
+
+For mqk cli usage see [mqk-cli](fhttps://github.com/moqike/mqk-cli)
+
+```sh
+# install cli tool
+npm i -g mqk-cli
+# install mock server template
+npm i -g mqk-template-mock-server-data@latest
+# cd to mock_home/data folder
+mqk g
+# select mock-server-data
+# input the data path
+# input default scenario name
+# choose whether to include proxy scenario
+```
+
 ### Validate request headers and data
 
 ```ts
