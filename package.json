@@ -1,6 +1,6 @@
 {
   "name": "mqk-mock-server",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "simple mock server supporting scenario based mock data",
   "keywords": [
     "mock",

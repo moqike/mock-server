@@ -410,7 +410,9 @@ export class MockServer {
   }
 
   private _enableCORS(): void {
-    this._app.use(cors());
+    this._app.use(cors({
+      credentials: true
+    }));
   }
 }
 
