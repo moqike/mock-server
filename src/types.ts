@@ -41,6 +41,7 @@ export interface GlobalConfig {
     max: number;
   };
   uploadFolder?: string;
+  proxyHeaderBlackList?: string[];
 }
 
 export type ScenarioSetting = string | string[];

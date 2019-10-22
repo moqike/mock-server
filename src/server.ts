@@ -324,12 +324,20 @@ export class MockServer {
     try {
       const protocal = proxySetting.protocal || 'http';
       const portInfo = proxySetting.port ? `:${proxySetting.port}` : '';
-      console.log(`${protocal}://${proxySetting.host}${portInfo}${targetPath}`);
+      console.log(`proxy to:${protocal}://${proxySetting.host}${portInfo}${targetPath}`);
+
+      const proxyHeaderBlackList = this._globalConfig.proxyHeaderBlackList || [];
+      const requestHeaders = {
+        ...ctx.request.headers
+      };
+      proxyHeaderBlackList.forEach((notAllowedProxyHeader) => {
+        delete requestHeaders[notAllowedProxyHeader];
+      });
       const result = await rp({
         url: `${protocal}://${proxySetting.host}${portInfo}${targetPath}`,
         method: ctx.request.method,
         headers: {
-          ...ctx.request.headers,
+          ...requestHeaders,
           host: proxySetting.host
         },
         qs: ctx.request.query,
