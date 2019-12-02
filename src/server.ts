@@ -37,6 +37,21 @@ interface ScenarioMap {
 const DEFAULT_SUCCESS_STATUS = 200;
 const DEFAULT_FAIL_STATUS = 500;
 
+enum API_METHOD {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  PATCH = 'PATCH',
+  DEL = 'DEL',
+}
+
+const ALLOWED_API_METHOD = [
+  API_METHOD.GET,
+  API_METHOD.POST,
+  API_METHOD.PUT,
+  API_METHOD.DEL,
+];
+
 export class MockServer {
   private _app: Koa = new Koa();
   private _router: Router = new Router();
@@ -48,6 +63,13 @@ export class MockServer {
   private _httpsOptions: HttpsOptions | null | undefined = null;
   private _globalConfig: GlobalConfig = {};
   private _multer: multer.Instance;
+  private _apiInfoMap: {
+    [key: string]: {
+      [methodKey in API_METHOD]?:  {
+        scenario: string;
+      }
+    }
+  } = {};
 
   constructor(options: MockServerOptions) {
     this._mockHome = (options.mockHome || process.env.MOCK_HOME || runtimePath) as string;
@@ -210,6 +232,17 @@ export class MockServer {
 
     routePathArray.forEach((routePath) => {
       console.log(`[${method}]: ${routePath} -> ${controllerPath}`);
+      
+      // register api info
+      if (!this._apiInfoMap[routePath]) {
+        this._apiInfoMap[routePath] = {};
+      }
+      if (ALLOWED_API_METHOD.indexOf(method.toUpperCase() as API_METHOD) !== -1) {
+        // leave as empty object for future usage
+        this._apiInfoMap[routePath][method.toUpperCase()] = {
+          controller: controllerPath
+        };
+      }
       this._router[method.toLowerCase()](routePath, this._multer.any(), wrappedController);
     });
 
@@ -356,6 +389,11 @@ export class MockServer {
   }
 
   private _registerPublicApi(): void {
+    this._router.get('/_api/api-list', async (ctx, next) => {
+      ctx.status = 200;
+      ctx.response.body = JSON.stringify(this._apiInfoMap);
+    });
+
     this._router.post('/_api/use-scenario', async (ctx, next) => {
       const request = ctx.request;
       const api = request.body.api;
@@ -387,9 +425,16 @@ export class MockServer {
       } else {
         scenario = this._getDefaultScenario(api);
       }
+      const absoluteControllerPath = `${this._mockHome}/data/${api}`;
+      const controllerFiles = fs.readdirSync(absoluteControllerPath);
+      const availableScenarios = controllerFiles.map((availableScenario) => {
+        const lastIndex = availableScenario.lastIndexOf('.');
+        return availableScenario.slice(0, lastIndex === -1 ? availableScenario.length: lastIndex);
+      });
       ctx.status = 200;
       ctx.response.body = {
-        scenario
+        scenario,
+        availableScenarios
       };
     });
 

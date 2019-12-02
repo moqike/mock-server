@@ -411,6 +411,8 @@ Params:
 
 
 ## Change log
+- v1.3.0
+  - add `_api/api-list` for UI integration
 - v1.2.4
   - `ms save` command
   - auto save changed scenarios to `preset/.tmp.ts` preset file
